@@ -5,9 +5,11 @@ package ca.shoaib.weather;
  */
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.text.format.Time;
 import android.util.Log;
@@ -34,8 +36,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -53,22 +53,10 @@ public class ForecastFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         this.setHasOptionsMenu(true);
 
-        String[] forecastArray = {
-                "Today - Sunny - 88/63",
-                "Tomorrow - Foggy - 70/40",
-                "Weds - Cloudy - 72/63",
-                "Thurs - Asteroids - 75/65",
-                "Fri - Heavy Rain - 65/56",
-                "Sat - Rain - 60/51",
-                "Sun - Sunny - 80/68"
-        };
-
-        List<String> weekForecast = new ArrayList<String>(Arrays.asList(forecastArray));
-
         mForecastAdapter = new ArrayAdapter<String>(getActivity(),
                 R.layout.list_item_forecast,
                 R.id.list_item_forecast_textview,
-                weekForecast);
+                new ArrayList<String>());
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter(mForecastAdapter);
@@ -88,6 +76,12 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Inflate the menu; this adds items to the action bar if it is present.
         super.onCreateOptionsMenu(menu, inflater);
@@ -103,13 +97,19 @@ public class ForecastFragment extends Fragment {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_refresh) {
-            Toast.makeText(getActivity().getApplicationContext(), "Refresh", Toast.LENGTH_SHORT).show();
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute("94044");
+            updateWeather();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void updateWeather() {
+
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        weatherTask.execute(location);
     }
 
 
@@ -320,6 +320,7 @@ public class ForecastFragment extends Fragment {
                 for (String dayForecastStr : result) {
                     mForecastAdapter.add(dayForecastStr);
                 }
+                Toast.makeText(getActivity().getApplicationContext(), "Updated", Toast.LENGTH_SHORT).show();
             }
         }
     }
