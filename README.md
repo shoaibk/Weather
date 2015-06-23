@@ -1,5 +1,5 @@
 # Weather
-Android Weather App showcasing best practices
+Android Weather App showcasing best practices.
 It implements the following features:
 - SQLite Database
 - Content Provider
